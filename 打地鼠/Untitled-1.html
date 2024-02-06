@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打地鼠遊戲</title>
+<style>
+  body {
+    text-align: center;
+  }
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    width: 400px;
+    margin: 0 auto;
+  }
+  .hole {
+    width: 100px;
+    height: 100px;
+    background-color: #ccc; /* 灰色地洞 */
+    border: 5px solid #6c4729;
+    border-radius: 50%; /* 圓形地洞 */
+    margin: 10px;
+    position: relative;
+    overflow: hidden; /* 隱藏超出邊界的內容 */
+  }
+  .mole {
+    width: 100px;
+    height: 100px;
+    background-size: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+  }
+  #score {
+    font-size: 24px;
+    margin-top: 20px;
+  }
+  #gameOver {
+    display: none;
+    font-size: 32px;
+    margin-top: 20px;
+  }
+  #rewardButton {
+    display: none;
+  }
+  #timer {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  #rewardImage {
+    display: none;
+    width: 500px;
+    height: 500px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+</style>
+</head>
+<body>
+<h1>打地鼠遊戲</h1>
+<button onclick="startGame()">開始遊戲</button>
+<div id="timer"></div>
+<div class="container">
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+  <div class="hole" onclick="hit(this)"><div class="mole"></div></div>
+</div>
+<div id="score">得分: <span id="scoreValue">0</span></div>
+<div id="gameOver">
+  <p>遊戲結束！</p>
+  <button id="rewardButton" onclick="claimReward()">領取獎勵</button>
+</div>
+<img id="rewardImage" src="" alt="Reward Image">
+
+<script>
+  const holes = document.querySelectorAll('.hole');
+  const moles = document.querySelectorAll('.mole');
+  let lastHole;
+  let timeUp = false;
+  let score = 0;
+  let timeLeft = 30;
+  let timerInterval;
+
+  function randomTime(min, max) {
+    return Math.round((Math.random() * (max - min) + min) * 1.1); // 加上10%的延遲
+  }
+
+  function randomHole(holes) {
+    const idx = Math.floor(Math.random() * holes.length);
+    const hole = holes[idx];
+    if (hole === lastHole) {
+      return randomHole(holes);
+    }
+    lastHole = hole;
+    return hole;
+  }
+
+  function peep() {
+    if (!timeUp) {
+      const time = randomTime(220, 1100); // 降低10%的速度
+      const hole = randomHole(holes);
+      const mole = hole.querySelector('.mole');
+      if (Math.random() < 0.5) {
+        mole.style.backgroundImage = "url('001.png')";
+      } else {
+        mole.style.backgroundImage = "url('002.png')";
+      }
+      mole.style.display = 'block'; // 將地鼠顯示出來
+      setTimeout(() => {
+        mole.style.display = 'none'; // 地鼠消失
+        if (!timeUp) peep();
+      }, time);
+    }
+  }
+
+  function startGame() {
+    timeUp = false;
+    score = 0;
+    timeLeft = 30; // 重置时间
+    updateScore();
+    startTimer();
+    peep();
+    document.getElementById('gameOver').style.display = 'none'; // 隐藏游戏结束提示
+    document.getElementById('rewardButton').style.display = 'none'; // 隐藏奖励按钮
+    document.getElementById('rewardImage').style.display = 'none'; // 隐藏奖励图片
+    setTimeout(() => {
+      timeUp = true;
+      clearInterval(timerInterval);
+      document.getElementById('timer').textContent = '';
+      if (score >= 15) {
+        setTimeout(() => {
+          document.getElementById('gameOver').style.display = 'block';
+          if (score >= 20) {
+            document.getElementById('rewardButton').style.display = 'block';
+          }
+        }, 1000); // 1秒後顯示遊戲結束和領取獎勵
+      }
+    }, 30000); // 30 seconds
+  }
+
+  function hit(hole) {
+    const mole = hole.querySelector('.mole');
+    if (!timeUp && mole.style.display !== 'none') {
+      if (mole.style.backgroundImage.includes("001.png")) {
+        score++;
+      } else if (mole.style.backgroundImage.includes("002.png")) {
+        score--;
+      }
+      updateScore();
+    }
+    mole.style.display = 'none'; // 將點擊的地鼠隱藏
+    if (score >= 20) {
+      timeUp = true;
+      clearInterval(timerInterval);
+      document.getElementById('timer').textContent = '';
+      document.getElementById('gameOver').style.display = 'block';
+      document.getElementById('rewardButton').style.display = 'block';
+    } else if (score >= 15) {
+      document.getElementById('rewardButton').style.display = 'inline-block';
+    }
+  }
+
+  function updateScore() {
+    const scoreValue = document.getElementById('scoreValue');
+    scoreValue.textContent = score;
+  }
+
+  function claimReward() {
+    const images = ['A.png', 'B.png', 'C.png', 'D.png', 'E.png', 'F.png'];
+    const randomIndex = Math.floor(Math.random() * images.length);
+    const randomImage = images[randomIndex];
+    document.getElementById('rewardImage').src = randomImage;
+    document.getElementById('rewardImage').style.display = 'block';
+    alert('確認領取獎勵');
+  }
+
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      document.getElementById('timer').textContent = `剩餘時間: ${timeLeft} 秒`;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('timer').textContent = '';
+        timeUp = true;
+        setTimeout(() => {
+          document.getElementById('gameOver').style.display = 'block';
+          if (score >= 20) {
+            document.getElementById('rewardButton').style.display = 'block';
+          }
+        }, 1000); // 1秒後顯示遊戲結束和領取獎勵
+      }
+    }, 1000); // 1 second
+  }
+</script>
+</body>
+</html>
